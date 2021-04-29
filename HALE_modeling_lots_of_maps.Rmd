@@ -1,0 +1,400 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(modelr)
+library(broom)
+
+# Import Data Below
+# read_csv()
+```
+
+```{r}
+#read CSV files
+HALElifeExpectancy = read_csv("HALElifeExpectancyAtBirth.csv")
+medicalDoctors = read_csv("medicalDoctors.csv")
+uhcCoverage = read_csv("uhcCoverage.csv")
+crudeSuicideRates = read_csv("crudeSuicideRates.csv")
+roadTrafficDeaths = read_csv("roadTrafficDeaths.csv")
+reproductiveAgeWomen = read_csv("reproductiveAgeWomen.csv")
+adolescentBirthRate = read_csv("adolescentBirthRate.csv")
+eliminateViolenceAgainstWomen = read_csv("eliminateViolenceAgainstWomen.csv")
+airPollutionDeathRate = read_csv("airPollutionDeathRate.csv")
+atLeastBasicSanitizationServices <- read_csv("atLeastBasicSanitizationServices.csv")
+nursingAndMidwife <- read_csv("nursingAndMidwife.csv")
+```
+# Data
+```{r}
+uhc_coverage_clean <- 
+  uhcCoverage %>% 
+  pivot_wider(names_from = 'Indicator', values_from = 'First Tooltip')
+head(uhc_coverage_clean)
+
+```
+
+
+```{r, eval = FALSE}
+library(tidyverse)
+library(rvest)
+library(magrittr)
+library(ggmap)
+library(stringr)
+library(gganimate)
+library(gifski)
+library(plotly)
+
+
+world_map_table <-map_data("world")
+
+
+uhc_coverage_clean <-  uhc_coverage_clean %>%
+  rename(
+    `Coverage Index` = `UHC index of essential service coverage`)
+
+view(uhc_coverage_clean)
+view(unique(world_map_table$region))
+
+# RECODE NAMES
+uhc_coverage_clean$Location <- recode(uhc_coverage_clean$Location,
+                                  'United States of America' = 'USA',
+                                   'Russian Federation' = 'Russia',
+                                  'Bolivia (Plurinational State of)' = "Bolivia",
+                                  'Venezuela (Bolivarian Republic of)' = 'Venezuela',
+                                  'Côte d’Ivoire' = "Ivory Coast",
+                                  "United Republic of Tanzania" = "Tanzania",
+                                  "Congo" = "Republic of Congo",
+                                  "United Kingdom of Great Britain and Northern Ireland" = "UK",
+                                  "Czechia"= "Czech Republic",
+                                  "Republic of Moldova" = "Moldova",
+                                  "The former Yugoslav Republic of Macedonia" = "Macedonia",
+                                  "Iran (Islamic Republic of)" = "Iran",
+                                  "Syrian Arab Republic" = "Syria", 
+                                  "Republic of Korea" = "South Korea",
+                                  "Democratic People's Republic of Korea" = "North Korea",
+                                  "Viet Nam" = "Vietnam",
+                                  "Lao People's Democratic Republic" = "Laos"
+                                  )
+#join tables
+both_tables = full_join(uhc_coverage_clean, world_map_table, by = c("Location" = "region"))
+head(both_tables)
+
+both_tables$Period <- as.integer(both_tables$'Period')
+
+head(both_tables)
+
+both_tables <- both_tables %>% 
+  rename(
+    Latitude = lat,
+    Longitude = long)
+
+#plot map data
+overall_map <- ggplot() +
+  geom_polygon(data = both_tables, aes(x = Longitude, y = Latitude, group = group, fill = `Coverage Index`)) +
+  labs(title = 'Essential Healthcare Coverage by Country') +
+  theme(legend.title = element_text(size = 5), 
+               legend.text = element_text(size = 4)) +
+  guides(color = guide_legend(override.aes = list(size = 0.5)))
+
+#animation—
+test_animation = overall_map + transition_manual(
+    both_tables$Period
+  )
+
+test_animation
+
+#plotly graph
+plotly_map = ggplotly(p = overall_map)
+plotly_map
+
+
+#now try it with both 2015 and 2017! 
+
+data_from_2017 = filter(uhc_coverage_clean, Period == 2017)
+data_from_2015 = filter(uhc_coverage_clean, Period == 2015)
+
+both_tables_2017 = full_join(data_from_2017, world_map_table, by = c("Location" = "region"))
+both_tables_2015 = full_join(data_from_2015, world_map_table, by = c("Location" = "region"))
+
+both_tables_2017 <- both_tables_2017 %>% 
+  rename(
+    Latitude = lat,
+    Longitude = long)
+
+both_tables_2015 <- both_tables_2015 %>% 
+  rename(
+    Latitude = lat,
+    Longitude = long)
+both_tables_2015
+
+map_2017 <- ggplot() +
+  geom_polygon(data = both_tables_2017, aes(x = Longitude, y = Latitude, group = group, fill = `Coverage Index`)) +
+  labs(title = 'Essential Healthcare Coverage by Country in 2017') +
+  scale_fill_continuous(name = "Coverage\nIndex", breaks = c(30, 40, 50, 60,70, 80, 90, 100)) +
+  theme(legend.title = element_text(size = 7), 
+               legend.text = element_text(size = 6))
+
+plotly_map_2017 = ggplotly(p = map_2017)
+plotly_map_2017
+
+map_2015
+map_2017
+overall_map
+
+map_2015 <-ggplot() +
+  geom_polygon(data = both_tables_2015, aes(x = Longitude, y = Latitude, group = group, fill = `Coverage Index`)) +
+  labs(title = 'Essential Healthcare Coverage by Country in 2015') 
+
+map_2015 <- map_2015 %>% +
+scale_fill_continuous(breaks = c(20, 30, 40, 50, 60, 70, 80, 90, 100)) +
+theme(legend.title = element_text(size = 7), 
+               legend.text = element_text(size = 6)) 
+
+
+```
+
+```{r}
+#here I will compile all the relevant code from the previous chunk, for a simple and functional final Rmd file
+
+library(tidyverse)
+library(rvest)
+library(magrittr)
+library(ggmap)
+library(stringr)
+library(gganimate)
+library(gifski)
+library(plotly)
+
+
+world_map_table <-map_data("world")
+
+#take hashtags off this code if it is needed 
+#uhc_coverage_clean <-  uhc_coverage_clean %>%
+  #rename(
+    #`Coverage Index` = `UHC index of essential service coverage`)
+
+view(uhc_coverage_clean)
+view(world_map_table)
+
+# RECODE NAMES
+uhc_coverage_clean$Location <- recode(uhc_coverage_clean$Location,
+                                  'United States of America' = 'USA',
+                                   'Russian Federation' = 'Russia',
+                                  'Bolivia (Plurinational State of)' = "Bolivia",
+                                  'Venezuela (Bolivarian Republic of)' = 'Venezuela',
+                                  'Côte d’Ivoire' = "Ivory Coast",
+                                  "United Republic of Tanzania" = "Tanzania",
+                                  "Congo" = "Republic of Congo",
+                                  "United Kingdom of Great Britain and Northern Ireland" = "UK",
+                                  "Czechia"= "Czech Republic",
+                                  "Republic of Moldova" = "Moldova",
+                                  "The former Yugoslav Republic of Macedonia" = "Macedonia",
+                                  "Iran (Islamic Republic of)" = "Iran",
+                                  "Syrian Arab Republic" = "Syria", 
+                                  "Republic of Korea" = "South Korea",
+                                  "Democratic People's Republic of Korea" = "North Korea",
+                                  "Viet Nam" = "Vietnam",
+                                  "Lao People's Democratic Republic" = "Laos",
+                                  "Sudan (until 2011)" = "Sudan"
+                                  )
+
+#select 2017 data, join it with map data, rename variables and plot it
+
+data_from_2017 = filter(uhc_coverage_clean, Period == 2017)
+
+both_tables_2017 = full_join(data_from_2017, world_map_table, by = c("Location" = "region"))
+
+both_tables_2017 <- both_tables_2017 %>% 
+  rename(
+    Latitude = lat,
+    Longitude = long)
+
+map_2017 <- ggplot() +
+  geom_polygon(data = both_tables_2017, aes(x = Longitude, y = Latitude, group = group, fill = `Coverage Index`)) +
+  labs(title = 'Essential Healthcare Coverage by Country in 2017') +
+  scale_fill_continuous(name = "Coverage\nIndex", breaks = c(30, 40, 50, 60,70, 80, 90, 100)) +
+  theme(legend.title = element_text(size = 7), 
+               legend.text = element_text(size = 6))
+
+plotly_map_2017 = ggplotly(p = map_2017)
+plotly_map_2017
+
+
+#now I will plot a gif of change over time from 2015-2017 
+
+#plot map data
+overall_map <- ggplot() +
+  geom_polygon(data = both_tables, aes(x = Longitude, y = Latitude, group = group, fill = `Coverage Index`)) +
+  labs(title = 'Essential Healthcare Coverage by Country 2015-2017') +
+  scale_fill_continuous(name = "Coverage\nIndex", breaks = c(30, 40, 50, 60,70, 80, 90, 100)) +
+  theme(legend.title = element_text(size = 5), 
+               legend.text = element_text(size = 4)) +
+  guides(color = guide_legend(override.aes = list(size = 0.5)))
+
+#animation
+test_animation = overall_map + transition_manual(
+    both_tables$Period)
+test_animation
+
+
+#now let's try graphing the countries that experienced the greatest change 
+
+#first widen dataset to include indexes from 2017 and 2015 separately
+
+library(tidyr)
+wider_data = pivot_wider(both_tables, names_from = Period, values_from = `Coverage Index`)
+head(wider_data)
+wider_data_final <- mutate(wider_data, Change = wider_data$`2017` - wider_data$`2015`)
+wider_data_final
+
+#now graph the changes! 
+
+overall_map_changes <- ggplot() +
+  geom_polygon(data = wider_data_final, aes(x = Longitude, y = Latitude, group = group, fill = `Change`)) +
+  labs(title = 'Changes in Coverage, 2015-2017') +
+  scale_fill_continuous(name = "Coverage Change") +
+  theme(legend.title = element_text(size = 5), 
+               legend.text = element_text(size = 4)) +
+  guides(color = guide_legend(override.aes = list(size = 0.5)))
+
+overall_map_changes
+
+```
+```{r}
+
+#here I will compile all the relevant code from the previous chunk, for a simple and functional final Rmd file
+
+library(tidyverse)
+library(rvest)
+library(magrittr)
+library(ggmap)
+library(stringr)
+library(gganimate)
+library(gifski)
+library(plotly)
+
+HALElifeExpectancy_Clean <-
+  HALElifeExpectancy %>%
+  select(-Indicator) %>%
+  pivot_wider(names_from = "Dim1" , 
+              values_from = "First Tooltip") %>%
+  rename("HALE_Both sexes" = "Both sexes", 
+         "HALE_Male" = "Male", 
+         "HALE_Female" = "Female", 
+         "Year" = "Period")
+view(HALElifeExpectancy_Clean)
+
+
+world_map_table <-map_data("world")
+
+view(world_map_table)
+
+#take hashtags off this code if it is needed 
+#uhc_coverage_clean <-  uhc_coverage_clean %>%
+  #rename(
+    #`Coverage Index` = `UHC index of essential service coverage`)
+
+view(uhc_coverage_clean)
+view(world_map_table)
+
+# RECODE NAMES
+HALElifeExpectancy_Clean$Location <- recode(HALElifeExpectancy_Clean$Location,
+                                  'United States of America' = 'USA',
+                                   'Russian Federation' = 'Russia',
+                                  'Bolivia (Plurinational State of)' = "Bolivia",
+                                  'Venezuela (Bolivarian Republic of)' = 'Venezuela',
+                                  'Côte d’Ivoire' = "Ivory Coast",
+                                  "United Republic of Tanzania" = "Tanzania",
+                                  "Congo" = "Republic of Congo",
+                                  "United Kingdom of Great Britain and Northern Ireland" = "UK",
+                                  "Czechia"= "Czech Republic",
+                                  "Republic of Moldova" = "Moldova",
+                                  "The former Yugoslav Republic of Macedonia" = "Macedonia",
+                                  "Iran (Islamic Republic of)" = "Iran",
+                                  "Syrian Arab Republic" = "Syria", 
+                                  "Republic of Korea" = "South Korea",
+                                  "Democratic People's Republic of Korea" = "North Korea",
+                                  "Viet Nam" = "Vietnam",
+                                  "Lao People's Democratic Republic" = "Laos",
+                                  "Sudan (until 2011)" = "Sudan"
+          )
+
+#select 2017 data, join it with map data, rename variables and plot it
+
+data_from_HALE = filter(uhc_coverage_clean, Period == 2017)
+
+both_tables_all = full_join(HALElifeExpectancy_Clean, world_map_table, by = c("Location" = "region"))
+
+both_tables_all <- both_tables_all %>% 
+  rename(
+    Latitude = lat,
+    Longitude = long)
+
+map_all <- ggplot() +
+  geom_polygon(data = both_tables_all, aes(x = Longitude, y = Latitude, group = group, fill = `HALE_Female`)) +
+  labs(title = 'Female Global Healthy Average Life Expectancy (HALE), 2000-2019') +
+  scale_fill_continuous(name = "Women's HALE (years)") +
+  theme(legend.title = element_text(size = 7), 
+               legend.text = element_text(size = 6))
+
+
+head(both_tables_all)
+
+test_animation_2 = map_all + transition_manual(
+    both_tables_all$Year)
+test_animation_2
+
+anim_save("Female_HALE_map2.gif", test_animation_2)
+
+#now I will plot a gif of change over time from 2015-2017 
+
+#plot map data
+overall_map <- ggplot() +
+  geom_polygon(data = both_tables, aes(x = Longitude, y = Latitude, group = group, fill = `Coverage Index`)) +
+  labs(title = 'Essential Healthcare Coverage by Country 2015-2017') +
+  scale_fill_continuous(name = "Coverage\nIndex", breaks = c(30, 40, 50, 60,70, 80, 90, 100)) +
+  theme(legend.title = element_text(size = 5), 
+               legend.text = element_text(size = 4)) +
+  guides(color = guide_legend(override.aes = list(size = 0.5)))
+
+#animation
+test_animation = overall_map + transition_manual(
+    both_tables$Period)
+test_animation
+
+
+#now let's try graphing the countries that experienced the greatest change 
+
+#first widen dataset to include indexes from 2017 and 2015 separately
+
+library(tidyr)
+wider_data = pivot_wider(both_tables, names_from = Period, values_from = `Coverage Index`)
+head(wider_data)
+wider_data_final <- mutate(wider_data, Change = wider_data$`2017` - wider_data$`2015`)
+wider_data_final
+
+#now graph the changes! 
+
+overall_map_changes <- ggplot() +
+  geom_polygon(data = wider_data_final, aes(x = Longitude, y = Latitude, group = group, fill = `Change`)) +
+  labs(title = 'Changes in Coverage, 2015-2017') +
+  scale_fill_continuous(name = "Coverage Change") +
+  theme(legend.title = element_text(size = 5), 
+               legend.text = element_text(size = 4)) +
+  guides(color = guide_legend(override.aes = list(size = 0.5)))
+
+overall_map_changes
+```
+
+
+
+
+
+
+
+
+
+
